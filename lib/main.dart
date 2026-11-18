@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -36,7 +37,7 @@ class LobbyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hesa Chat Lobby'),
+        title: const Text('Kumpul - Lobby Room'),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
       ),
@@ -47,28 +48,24 @@ class LobbyScreen extends StatelessWidget {
             child: ListTile(
               leading: const CircleAvatar(
                 backgroundColor: Colors.deepPurple,
-                child: Icon(Icons.forum, color: Colors.white),
+                child: Icon(Icons.chat, color: Colors.white),
               ),
-              title: const Text('Room Ngobrol Santai'),
-              subtitle: const Text('Ketuk Masuk untuk buka pop-up chat'),
-              trailing: ElevatedButton(
-                onPressed: () => _bukaPopUpChat(context, 'Room Ngobrol Santai'),
-                child: const Text('Masuk'),
-              ),
+              title: const Text('Room Santai Malam'),
+              subtitle: const Text('Ketuk untuk masuk ke dalam room'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _bukaPopUpChat(context, 'Room Santai Malam'),
             ),
           ),
           Card(
             child: ListTile(
               leading: const CircleAvatar(
-                backgroundColor: Colors.orange,
-                child: Icon(Icons.mic, color: Colors.white),
+                backgroundColor: Colors.amber,
+                child: Icon(Icons.workspace_premium, color: Colors.black),
               ),
-              title: const Text('Room Mabar & Voice'),
-              subtitle: const Text('Ketuk Masuk untuk buka pop-up chat'),
-              trailing: ElevatedButton(
-                onPressed: () => _bukaPopUpChat(context, 'Room Mabar & Voice'),
-                child: const Text('Masuk'),
-              ),
+              title: const Text('Room Sultan SVIP 1 - 7'),
+              subtitle: const Text('Uji coba efek masuk SVIP 1 sampai 7'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _bukaPopUpChat(context, 'Room Sultan SVIP'),
             ),
           ),
         ],
@@ -87,19 +84,144 @@ class ChatRoomPopUp extends StatefulWidget {
 
 class _ChatRoomPopUpState extends State<ChatRoomPopUp> {
   final TextEditingController _pesanController = TextEditingController();
-  final List<Map<String, String>> _daftarPesan = [
-    {'pengirim': 'Sistem', 'teks': 'Selamat datang di ruang obrolan!'},
+
+  final List<Map<String, dynamic>> _daftarPesan = [
+    {'pengirim': 'Admin', 'teks': 'Selamat datang di room!', 'svip': 0, 'isSistem': false},
   ];
 
+  Map<String, dynamic>? _efekAktif;
+  Timer? _timerEfek;
+
+  // Level SVIP akun Anda saat ini (ubah angka 1 sampai 7 untuk mengganti level Anda)
+  int _levelSvipSaya = 7;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pemainMasukRoom('Saya', _levelSvipSaya);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timerEfek?.cancel();
+    _pesanController.dispose();
+    super.dispose();
+  }
+
+  void _pemainMasukRoom(String namaPemain, int levelSvip) {
+    setState(() {
+      _daftarPesan.add({
+        'pengirim': namaPemain,
+        'teks': 'memasuki ruangan',
+        'svip': levelSvip,
+        'isSistem': true,
+      });
+
+      if (levelSvip > 0) {
+        _efekAktif = {
+          'nama': namaPemain,
+          'svip': levelSvip,
+        };
+      }
+    });
+
+    if (levelSvip > 0) {
+      _timerEfek?.cancel();
+      _timerEfek = Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _efekAktif = null;
+          });
+        }
+      });
+    }
+  }
+
   void _kirimPesan() {
-    if (_pesanController.text.trim().isEmpty) return;
+    final teks = _pesanController.text.trim();
+    if (teks.isEmpty) return;
+
     setState(() {
       _daftarPesan.add({
         'pengirim': 'Saya',
-        'teks': _pesanController.text.trim(),
+        'teks': teks,
+        'svip': _levelSvipSaya,
+        'isSistem': false,
       });
     });
     _pesanController.clear();
+  }
+
+  // Konfigurasi Lengkap SVIP 1 sampai SVIP 7
+  Map<String, dynamic> _getConfigSvip(int level) {
+    switch (level) {
+      case 1:
+        return {
+          'label': 'SVIP 1',
+          'ikon': Icons.shield,
+          'warna': [Colors.teal.shade700, Colors.teal.shade400],
+          'badgeColor': Colors.teal,
+          'teksWarna': Colors.white,
+          'judul': 'Pendatang Baru VIP!',
+        };
+      case 2:
+        return {
+          'label': 'SVIP 2',
+          'ikon': Icons.bolt,
+          'warna': [Colors.blue.shade800, Colors.lightBlue.shade400],
+          'badgeColor': Colors.blue,
+          'teksWarna': Colors.white,
+          'judul': 'Ksatria Biru tiba!',
+        };
+      case 3:
+        return {
+          'label': 'SVIP 3',
+          'ikon': Icons.auto_awesome,
+          'warna': [Colors.indigo.shade800, Colors.purpleAccent],
+          'badgeColor': Colors.indigo,
+          'teksWarna': Colors.white,
+          'judul': 'Bangsawan Malam hadir!',
+        };
+      case 4:
+        return {
+          'label': 'SVIP 4',
+          'ikon': Icons.local_fire_department,
+          'warna': [Colors.purple.shade900, Colors.pinkAccent],
+          'badgeColor': Colors.purple,
+          'teksWarna': Colors.white,
+          'judul': 'Aura Ungu menyala!',
+        };
+      case 5:
+        return {
+          'label': 'SVIP 5',
+          'ikon': Icons.whatshot,
+          'warna': [Colors.red.shade900, Colors.orange.shade600],
+          'badgeColor': Colors.red,
+          'teksWarna': Colors.white,
+          'judul': 'Naga Merah memasuki room!',
+        };
+      case 6:
+        return {
+          'label': 'SVIP 6',
+          'ikon': Icons.diamond,
+          'warna': [Colors.amber.shade800, Colors.amber.shade400],
+          'badgeColor': Colors.amber.shade700,
+          'teksWarna': Colors.black,
+          'judul': 'SULTAN EMAS TELAH TIBA!',
+        };
+      case 7:
+      default:
+        return {
+          'label': 'SVIP 7',
+          'ikon': Icons.workspace_premium,
+          'warna': [const Color(0xFF1A1A2E), const Color(0xFFD4AF37), const Color(0xFF1A1A2E)],
+          'badgeColor': const Color(0xFFD4AF37),
+          'teksWarna': Colors.white,
+          'judul': 'KAISAR TERTINGGI SVIP 7 HADIR!',
+        };
+    }
   }
 
   @override
@@ -112,103 +234,73 @@ class _ChatRoomPopUpState extends State<ChatRoomPopUp> {
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: Column(
+        child: Stack(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: const BoxDecoration(
-                color: Colors.deepPurple,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    widget.namaRoom,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+            Column(
+              children: [
+                // Header Room
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: const BoxDecoration(
+                    color: Colors.deepPurple,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _daftarPesan.length,
-                itemBuilder: (context, index) {
-                  final pesan = _daftarPesan[index];
-                  final isSaya = pesan['pengirim'] == 'Saya';
-                  return Align(
-                    alignment: isSaya ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isSaya ? Colors.deepPurple : Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            pesan['pengirim']!,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: isSaya ? Colors.white70 : Colors.black54,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            pesan['teks']!,
-                            style: TextStyle(
-                              color: isSaya ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _pesanController,
-                      decoration: InputDecoration(
-                        hintText: 'Ketik pesan...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        widget.namaRoom,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                       ),
-                    ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  CircleAvatar(
-                    backgroundColor: Colors.deepPurple,
-                    child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white),
-                      onPressed: _kirimPesan,
-                    ),
+                ),
+
+                // Bar Uji Coba SVIP 1 sampai SVIP 7 (Bisa digeser ke samping)
+                Container(
+                  color: Colors.deepPurple.shade50,
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    children: [
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: Text('Tes Masuk:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      _tombolTes('SVIP 1', Colors.teal, () => _pemainMasukRoom('Pemain_1', 1)),
+                      _tombolTes('SVIP 2', Colors.blue, () => _pemainMasukRoom('Pemain_2', 2)),
+                      _tombolTes('SVIP 3', Colors.indigo, () => _pemainMasukRoom('Pemain_3', 3)),
+                      _tombolTes('SVIP 4', Colors.purple, () => _pemainMasukRoom('Pemain_4', 4)),
+                      _tombolTes('SVIP 5', Colors.red, () => _pemainMasukRoom('Pemain_5', 5)),
+                      _tombolTes('SVIP 6', Colors.amber.shade800, () => _pemainMasukRoom('Sultan_6', 6)),
+                      _tombolTes('SVIP 7', Colors.black87, () => _pemainMasukRoom('Kaisar_7', 7)),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+                ),
+
+                // Daftar Pesan & Notifikasi Masuk
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _daftarPesan.length,
+                    itemBuilder: (context, index) {
+                      final pesan = _daftarPesan[index];
+                      final int levelSvip = pesan['svip'] ?? 0;
+                      final bool isSistem = pesan['isSistem'] ?? false;
+
+                      if (isSistem) {
+                        final config = levelSvip > 0 ? _getConfigSvip(levelSvip) : null;
+                        return Center(
+
+   
